@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+
+  <style>
+
+    body{
+      background:#1e1e1e;
+      color:white;
+      font-family:Arial;
+      padding:20px;
+    }
+
+    .box{
+
+      max-width:400px;
+      margin:auto;
+      margin-top:120px;
+
+      background:#252525;
+
+      padding:25px;
+
+      border-radius:12px;
+    }
+
+    h2{
+      text-align:center;
+      margin-bottom:25px;
+    }
+
+    input,
+    button{
+
+      width:100%;
+
+      padding:12px;
+
+      margin-top:10px;
+
+      border:none;
+      border-radius:8px;
+
+      box-sizing:border-box;
+    }
+
+    input{
+      background:#2f2f2f;
+      color:white;
+    }
+
+    button{
+
+      background:#5865F2;
+
+      color:white;
+
+      font-weight:bold;
+
+      cursor:pointer;
+    }
+
+    #status{
+      margin-top:15px;
+      text-align:center;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <h2>Admin Login</h2>
+
+  <input
+    id="pin"
+    type="password"
+    placeholder="Enter PIN"
+  >
+
+  <button onclick="login()">
+    Login
+  </button>
+
+  <div id="status"></div>
+
+</div>
+
+<script>
+
+/* ---------------- API ---------------- */
+
+const API =
+"https://webbookdiscordapp.darkerdag.workers.dev";
+
+/* ---------------- LOGIN ---------------- */
+
+async function login(){
+
+  const pin =
+    document.getElementById(
+      "pin"
+    ).value;
+
+  const status =
+    document.getElementById(
+      "status"
+    );
+
+  status.innerHTML =
+    "Logging in...";
+
+  try{
+
+    const res = await fetch(
+
+      API + "/login",
+
+      {
+
+        method:"POST",
+
+        headers:{
+          "Content-Type":
+          "application/json"
+        },
+
+        body:JSON.stringify({
+          pin: pin
+        })
+
+      }
+
+    );
+
+    const data =
+      await res.json();
+
+    if(data.success){
+
+      localStorage.setItem(
+        "token",
+        data.token
+      );
+
+      status.innerHTML =
+        "Success";
+
+      window.location =
+        "dashboard.html";
+
+    }else{
+
+      status.innerHTML =
+        "Wrong PIN";
+
+    }
+
+  }catch(err){
+
+    status.innerHTML =
+      "Connection Failed";
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>

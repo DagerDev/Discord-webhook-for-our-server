@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Announcement Dashboard</title>
+
+  <style>
+
+    body{
+      background:#1e1e1e;
+      color:white;
+      font-family:Arial;
+      padding:20px;
+    }
+
+    input,
+    textarea,
+    select,
+    button{
+
+      width:100%;
+      padding:12px;
+      margin-top:8px;
+      margin-bottom:14px;
+
+      border:none;
+      border-radius:8px;
+
+      background:#2b2b2b;
+      color:white;
+      box-sizing:border-box;
+    }
+
+    textarea{
+      height:140px;
+      resize:none;
+    }
+
+    button{
+      background:#5865F2;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+    }
+
+    .row select{
+      width:100%;
+    }
+
+    h2{
+      margin-bottom:25px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<h2>Announcement Dashboard</h2>
+
+<!-- WEBHOOK -->
+
+<label>Webhook</label>
+
+<select id="webhook">
+
+  <option value="Main">Main</option>
+
+  <option value="Events">Events</option>
+
+  <option value="Updates">Updates</option>
+
+</select>
+
+<!-- TITLE -->
+
+<label>Title</label>
+
+<input
+  id="title"
+  placeholder="Game Jam Starts"
+>
+
+<!-- AUTHOR -->
+
+<label>Announcement By</label>
+
+<input
+  id="author"
+  placeholder="Your Name"
+>
+
+<!-- MESSAGE -->
+
+<label>Message</label>
+
+<textarea
+  id="message"
+  placeholder="Write announcement..."
+></textarea>
+
+<!-- ENABLE TIME -->
+
+<label>Add Time?</label>
+
+<select
+  id="timeEnabled"
+  onchange="toggleTime()"
+>
+
+  <option value="no">
+    No
+  </option>
+
+  <option value="yes">
+    Yes
+  </option>
+
+</select>
+
+<!-- TIME BOX -->
+
+<div
+  id="timeBox"
+  style="display:none;"
+>
+
+  <label>Time</label>
+
+  <div class="row">
+
+    <select id="hour"></select>
+
+    <select id="minute"></select>
+
+    <select id="ampm">
+
+      <option>
+        AM
+      </option>
+
+      <option>
+        PM
+      </option>
+
+    </select>
+
+  </div>
+
+  <!-- BASE UTC -->
+
+  <label>Base UTC</label>
+
+  <select id="baseUTC"></select>
+
+  <!-- UTC CONVERT -->
+
+  <label>Convert To UTC</label>
+
+  <select
+    id="convertUTC"
+    multiple
+    size="8"
+  ></select>
+
+</div>
+
+<!-- SEND -->
+
+<button onclick="send()">
+
+  Send Announcement
+
+</button>
+
+<script>
+
+/* ---------------- API ---------------- */
+
+const API =
+"https://webbookdiscordapp.darkerdag.workers.dev";
+
+/* ---------------- LOGIN CHECK ---------------- */
+
+if(
+  !localStorage.getItem("token")
+){
+  window.location =
+    "login.html";
+}
+
+/* ---------------- WEBHOOKS ---------------- */
+
+const webhookSelect =
+  document.getElementById(
+    "webhook"
+  );
+
+/* ---------------- HOURS ---------------- */
+
+const hour =
+  document.getElementById(
+    "hour"
+  );
+
+for(let i=1;i<=12;i++){
+
+  let o =
+    document.createElement(
+      "option"
+    );
+
+  o.value = i;
+  o.text = i;
+
+  hour.appendChild(o);
+
+}
+
+/* ---------------- MINUTES ---------------- */
+
+const minute =
+  document.getElementById(
+    "minute"
+  );
+
+for(let i=0;i<60;i+=5){
+
+  let v =
+    i.toString()
+    .padStart(2,"0");
+
+  let o =
+    document.createElement(
+      "option"
+    );
+
+  o.value = v;
+  o.text = v;
+
+  minute.appendChild(o);
+
+}
+
+/* ---------------- UTC ---------------- */
+
+const utcList = [
+
+"UTC-12",
+"UTC-11",
+"UTC-10",
+"UTC-9",
+"UTC-8",
+"UTC-7",
+"UTC-6",
+"UTC-5",
+"UTC-4",
+"UTC-3",
+"UTC-2",
+"UTC-1",
+"UTC+0",
+"UTC+1",
+"UTC+2",
+"UTC+3",
+"UTC+4",
+"UTC+5",
+"UTC+6",
+"UTC+7",
+"UTC+8",
+"UTC+9",
+"UTC+10",
+"UTC+11",
+"UTC+12"
+
+];
+
+const baseUTC =
+  document.getElementById(
+    "baseUTC"
+  );
+
+const convertUTC =
+  document.getElementById(
+    "convertUTC"
+  );
+
+utcList.forEach(u=>{
+
+  baseUTC.innerHTML +=
+    `<option>${u}</option>`;
+
+  convertUTC.innerHTML +=
+    `<option>${u}</option>`;
+
+});
+
+/* ---------------- TOGGLE ---------------- */
+
+function toggleTime(){
+
+  document.getElementById(
+    "timeBox"
+  ).style.display =
+
+  document.getElementById(
+    "timeEnabled"
+  ).value === "yes"
+
+  ? "block"
+
+  : "none";
+
+}
+
+/* ---------------- UTC NUMBER ---------------- */
+
+function getUTC(v){
+
+  return parseInt(
+
+    v.replace(
+      "UTC",
+      ""
+    )
+
+  );
+
+}
+
+/* ---------------- CONVERT ---------------- */
+
+function convertTime(
+  hour,
+  from,
+  to
+){
+
+  return (
+    hour - from + to + 24
+  ) % 24;
+
+}
+
+/* ---------------- FORMAT ---------------- */
+
+function formatHour(h){
+
+  let p =
+    h >= 12
+    ? "PM"
+    : "AM";
+
+  h = h % 12 || 12;
+
+  return {
+    h,
+    p
+  };
+
+}
+
+/* ---------------- SEND ---------------- */
+
+async function send(){
+
+  const title =
+    document.getElementById(
+      "title"
+    ).value;
+
+  const author =
+    document.getElementById(
+      "author"
+    ).value;
+
+  const message =
+    document.getElementById(
+      "message"
+    ).value;
+
+  const webhook =
+    document.getElementById(
+      "webhook"
+    ).value;
+
+  let content = "";
+
+  /* TITLE */
+
+  content +=
+    "## " +
+    title +
+    "\n\n";
+
+  /* MESSAGE */
+
+  content +=
+    message +
+    "\n\n";
+
+  /* AUTHOR */
+
+  content +=
+    "— " +
+    author +
+    "\n\n";
+
+  /* TIME */
+
+  if(
+
+    document.getElementById(
+      "timeEnabled"
+    ).value === "yes"
+
+  ){
+
+    const h =
+      parseInt(
+        document.getElementById(
+          "hour"
+        ).value
+      );
+
+    const m =
+      document.getElementById(
+        "minute"
+      ).value;
+
+    const ampm =
+      document.getElementById(
+        "ampm"
+      ).value;
+
+    const base =
+      getUTC(
+        document.getElementById(
+          "baseUTC"
+        ).value
+      );
+
+    let h24 = h;
+
+    if(
+      ampm === "PM"
+      && h !== 12
+    ){
+      h24 += 12;
+    }
+
+    if(
+      ampm === "AM"
+      && h === 12
+    ){
+      h24 = 0;
+    }
+
+    content +=
+      "**TIME**\n";
+
+    content +=
+      "`" +
+      h + ":" + m +
+      " " + ampm +
+      " (" +
+      document.getElementById(
+        "baseUTC"
+      ).value +
+      ")`\n";
+
+    const selected =
+
+      Array.from(
+
+        document.getElementById(
+          "convertUTC"
+        ).selectedOptions
+
+      ).map(
+        o=>o.value
+      );
+
+    selected.forEach(u=>{
+
+      const to =
+        getUTC(u);
+
+      const conv =
+        convertTime(
+          h24,
+          base,
+          to
+        );
+
+      const f =
+        formatHour(conv);
+
+      content +=
+
+        "`" +
+
+        f.h + ":" + m +
+
+        " " + f.p +
+
+        " (" + u + ")`\n";
+
+    });
+
+  }
+
+  /* SEND */
+
+  const res = await fetch(
+
+    API + "/send",
+
+    {
+
+      method:"POST",
+
+      headers:{
+        "Content-Type":
+        "application/json"
+      },
+
+      body:JSON.stringify({
+
+        token:
+          localStorage.getItem(
+            "token"
+          ),
+
+        webhook:
+          webhook,
+
+        message:
+          content
+
+      })
+
+    }
+
+  );
+
+  if(res.ok){
+
+    alert("Sent");
+
+  }else{
+
+    alert("Failed");
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
