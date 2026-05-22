@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body style="background:#1e1e1e;color:white;font-family:Arial;">
+
+<script>
+
+const token = localStorage.getItem("token");
+
+if(token){
+  window.location.href = "dashboard.html";
+}else{
+  window.location.href = "login.html";
+}
+
+</script>
+
+</body>
+</html>
