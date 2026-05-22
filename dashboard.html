@@ -176,6 +176,10 @@
 
 </button>
 
+<button onclick="logout()" style="background:#ff4d4d;">
+  Logout
+</button>
+
 <script>
 
 /* ---------------- API ---------------- */
@@ -296,6 +300,17 @@ utcList.forEach(u=>{
     `<option>${u}</option>`;
 
 });
+/* ---------------- LOG OUTT ---------------- */
+function logout(){
+
+  const confirmLogout = confirm("Are you sure you want to log out?");
+
+  if(!confirmLogout) return;
+
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
+
+}
 
 /* ---------------- TOGGLE ---------------- */
 
